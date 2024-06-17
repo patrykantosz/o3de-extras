@@ -33,6 +33,7 @@ namespace ROS2
         AZ::Transform m_defaultSpawnPose = { AZ::Vector3{ 0, 0, 0 }, AZ::Quaternion{ 0, 0, 0, 1 }, 1.0 };
 
         AZStd::unordered_map<AZStd::string, AZ::Data::Asset<AzFramework::Spawnable>> m_spawnables;
+        bool m_supportWGS{ true };
     };
 
     class ROS2SpawnerComponentController : public SpawnerRequestsBus::Handler
@@ -62,6 +63,7 @@ namespace ROS2
         SpawnPointInfoMap GetSpawnPoints() const;
         AZ::EntityId GetEditorEntityId() const;
         AZStd::unordered_map<AZStd::string, AZ::Data::Asset<AzFramework::Spawnable>> GetSpawnables() const;
+        bool GetSupportWGS() const;
 
     private:
         ROS2SpawnerComponentConfig m_config;
