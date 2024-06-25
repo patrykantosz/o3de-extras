@@ -116,6 +116,7 @@ set(FILES
         Source/Sensor/Events/PhysicsBasedSource.cpp
         Source/Sensor/Events/TickBasedSource.cpp
         Source/Sensor/SensorConfiguration.cpp
+        Source/Sensor/SensorHelpers.cpp
         Source/SimulationUtils/FollowingCameraConfiguration.cpp
         Source/SimulationUtils/FollowingCameraConfiguration.h
         Source/SimulationUtils/FollowingCameraComponent.cpp
