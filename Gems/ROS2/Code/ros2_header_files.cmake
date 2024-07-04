@@ -34,6 +34,7 @@ set(FILES
         Include/ROS2/RobotControl/ControlConfiguration.h
         Include/ROS2/RobotControl/ControlSubscriptionHandler.h
         Include/ROS2/RobotImporter/SDFormatSensorImporterHook.h
+        Include/ROS2/ROS2SensorTypesIds.h
         Include/ROS2/Lidar/LidarRaycasterBus.h
         Include/ROS2/Lidar/LidarSystemBus.h
         Include/ROS2/Lidar/LidarRegistrarBus.h
@@ -46,6 +47,7 @@ set(FILES
         Include/ROS2/Sensor/ROS2SensorComponentBase.h
         Include/ROS2/Sensor/SensorConfiguration.h
         Include/ROS2/Sensor/SensorConfigurationRequestBus.h
+        Include/ROS2/Sensor/SensorHelper.h
         Include/ROS2/Spawner/SpawnerBus.h
         Include/ROS2/Utilities/Controllers/PidConfiguration.h
         Include/ROS2/Utilities/ROS2Conversions.h
