@@ -35,45 +35,47 @@ namespace ROS2
        auto ros2Node = ROS2Interface::Get()->GetNode();
        AZ_Assert(ros2Node, "ROS 2 node is not initialized");
 
+        const auto serviceNames = m_controller.GetServiceNames();
+
         m_getSpawnablesNamesService = ros2Node->create_service<gazebo_msgs::srv::GetWorldProperties>(
-            "get_available_spawnable_names",
+            serviceNames.m_availableSpawnableNamesServiceName.c_str(),
             [this](const GetAvailableSpawnableNamesRequest request, GetAvailableSpawnableNamesResponse response)
             {
                 GetAvailableSpawnableNames(request, response);
             });
 
-       m_spawnService = ros2Node->create_service<gazebo_msgs::srv::SpawnEntity>(
-           "spawn_entity",
-           [this](
-               const SpawnEntityServiceHandle service_handle,
-               const std::shared_ptr<rmw_request_id_t> header,
-               const SpawnEntityRequest request)
-           {
-               SpawnEntity(service_handle, header, request);
-           });
+        m_spawnService = ros2Node->create_service<gazebo_msgs::srv::SpawnEntity>(
+            serviceNames.m_spawnEntityServiceName.c_str(),
+            [this](
+                const SpawnEntityServiceHandle service_handle,
+                const std::shared_ptr<rmw_request_id_t> header,
+                const SpawnEntityRequest request)
+            {
+                SpawnEntity(service_handle, header, request);
+            });
 
-       m_deleteService = ros2Node->create_service<gazebo_msgs::srv::DeleteEntity>(
-           "delete_entity",
-           [this](
-               const DeleteEntityServiceHandle service_handle, const std::shared_ptr<rmw_request_id_t> header, DeleteEntityRequest request)
-           {
-               DeleteEntity(service_handle, header, request);
-           });
+        m_deleteService = ros2Node->create_service<gazebo_msgs::srv::DeleteEntity>(
+            serviceNames.m_deleteEntityServiceName.c_str(),
+            [this](
+                const DeleteEntityServiceHandle service_handle, const std::shared_ptr<rmw_request_id_t> header, DeleteEntityRequest request)
+            {
+                DeleteEntity(service_handle, header, request);
+            });
 
-       m_getSpawnPointInfoService = ros2Node->create_service<gazebo_msgs::srv::GetModelState>(
-           "get_spawn_point_info",
-           [this](const GetSpawnPointInfoRequest request, GetSpawnPointInfoResponse response)
-           {
-               GetSpawnPointInfo(request, response);
-           });
+        m_getSpawnPointInfoService = ros2Node->create_service<gazebo_msgs::srv::GetModelState>(
+            serviceNames.m_spawnPointInfoServiceName.c_str(),
+            [this](const GetSpawnPointInfoRequest request, GetSpawnPointInfoResponse response)
+            {
+                GetSpawnPointInfo(request, response);
+            });
 
-       m_getSpawnPointsNamesService = ros2Node->create_service<gazebo_msgs::srv::GetWorldProperties>(
-           "get_spawn_points_names",
-           [this](const GetSpawnPointsNamesRequest request, GetSpawnPointsNamesResponse response)
-           {
-               GetSpawnPointsNames(request, response);
-           });
-   }
+        m_getSpawnPointsNamesService = ros2Node->create_service<gazebo_msgs::srv::GetWorldProperties>(
+            serviceNames.m_spawnPointsNamesServiceName.c_str(),
+            [this](const GetSpawnPointsNamesRequest request, GetSpawnPointsNamesResponse response)
+            {
+                GetSpawnPointsNames(request, response);
+            });
+    }
 
    void ROS2SpawnerComponent::Deactivate()
    {
@@ -251,6 +253,7 @@ namespace ROS2
 
        auto* transformInterface = root->FindComponent<AzFramework::TransformComponent>();
        transformInterface->SetWorldTM(transform);
+       transformInterface->SetParent(GetEntityId());
 
        AZStd::string instanceName = AZStd::string::format("%s_%d", spawnableName.c_str(), m_counter++);
        for (AZ::Entity* entity : view)
