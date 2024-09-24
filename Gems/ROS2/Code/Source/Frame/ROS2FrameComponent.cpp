@@ -32,6 +32,39 @@ namespace ROS2
             return interface;
         }
 
+        void GetAllDescendants(const AZ::EntityId& parent, AZStd::unordered_set<AZ::EntityId>& descendants)
+        {
+            AZStd::vector<AZ::EntityId> children;
+            AZ::TransformBus::EventResult(children, parent, &AZ::TransformInterface::GetChildren);
+
+            for (const AZ::EntityId& child : children)
+            {
+                descendants.insert(child);
+                GetAllDescendants(child, descendants);
+            }
+        }
+
+        const ROS2FrameComponent* GetROS2FrameFromEntityId(const AZ::EntityId& entityId, const AZ::EntityId& selfEntityId)
+        {
+            AZStd::unordered_set<AZ::EntityId> descendants;
+            GetAllDescendants(selfEntityId, descendants);
+            if (!entityId.IsValid() || entityId == selfEntityId || descendants.find(entityId) != descendants.end())
+            { // Invalid entity id means that ROS2Frame should use GetFirstROS2FrameAncestor function to find a parent frame
+                return nullptr;
+            }
+
+            AZ::Entity* entity = nullptr;
+            AZ::ComponentApplicationBus::BroadcastResult(entity, &AZ::ComponentApplicationRequests::FindEntity, entityId);
+            if (entity == nullptr)
+            {
+                AZ_Error("GetROS2FrameFromEntityId", false, "Invalid entity!");
+                return nullptr;
+            }
+            // AZ_Assert(entity, "Cannot find entity with id : %s", entityId.ToString().c_str());
+
+            return Utils::GetGameOrEditorComponent<ROS2FrameComponent>(entity);
+        }
+
         const ROS2FrameComponent* GetFirstROS2FrameAncestor(const AZ::Entity* entity)
         {
             auto* entityTransformInterface = GetEntityTransformInterface(entity);
@@ -156,7 +189,12 @@ namespace ROS2
 
     const ROS2FrameComponent* ROS2FrameComponent::GetParentROS2FrameComponent() const
     {
-        return Internal::GetFirstROS2FrameAncestor(GetEntity());
+        auto* component = Internal::GetROS2FrameFromEntityId(m_parentId, GetEntityId());
+        if (component == nullptr)
+        {
+            component = Internal::GetFirstROS2FrameAncestor(GetEntity());
+        }
+        return component;
     }
 
     AZ::Transform ROS2FrameComponent::GetFrameTransform() const
@@ -224,6 +262,7 @@ namespace ROS2
             serialize->Class<ROS2FrameComponent, AZ::Component>()
                 ->Version(1)
                 ->Field("Namespace Configuration", &ROS2FrameComponent::m_namespaceConfiguration)
+                ->Field("Parent Entity Id", &ROS2FrameComponent::m_parentId)
                 ->Field("Frame Name", &ROS2FrameComponent::m_frameName)
                 ->Field("Joint Name", &ROS2FrameComponent::m_jointNameString)
                 ->Field("Publish Transform", &ROS2FrameComponent::m_publishTransform);
@@ -241,6 +280,7 @@ namespace ROS2
                         &ROS2FrameComponent::m_namespaceConfiguration,
                         "Namespace Configuration",
                         "Namespace Configuration")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &ROS2FrameComponent::m_parentId, "Parent Entity Id", "Id of an entity that should be set as a parent frame")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &ROS2FrameComponent::m_frameName, "Frame Name", "Frame Name")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &ROS2FrameComponent::m_jointNameString, "Joint Name", "Joint Name")
                     ->DataElement(
